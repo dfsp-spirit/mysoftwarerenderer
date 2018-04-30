@@ -10,9 +10,10 @@ const TGAColor blue = TGAColor(0, 0, 255, 255);
 int main(int argc, char** argv) {
     TGAImage image(100, 100, TGAImage::RGB);
 
-    line(13, 20, 80, 40, image, white);
+    line(25, 25, 95, 95, image, white);
     line(20, 13, 40, 80, image, red);
-    line(80, 40, 13, 20, image, green);
+    line(40, 80, 20, 13, image, green); // Note that this green line will overwrite the last red line
+    line(10, 10, 30, 80, image, blue);
 
 
     image.flip_vertically();  // Origin should be in the left bottom corner.
@@ -30,20 +31,28 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     }
 
     // Make sure the first point is left of the second one, as we assume that later on.
-    if(x0>x1) {
+    if(x0 > x1) {
         std::swap(x0, x1);
         std::swap(y0, y1);
     }
 
     // Set the color for each pixel.
+    int deltax = x1 - x0;
+    int deltay = y1 - y0;
+    int derror2 = std::abs(deltay) * 2;
+    int error2 = 0;
+    int y = y0;
     for (int x = x0; x <= x1; x++) {
-        float t = (x - x0) / (float) (x1 - x0);
-        int y = y0 * (1. - t) + y1 * t;
         if(isLineSteep) {
             image.set(y, x, color);   // If we transposed the coords, adapt the positions here accordingly.
         }
         else {
             image.set(x, y, color);
+        }
+        error2 += derror2;
+        if (error2 > deltax) {
+            y += (y1 > y0 ? 1 : -1);
+            error2 -= deltax * 2;
         }
     }
 }
