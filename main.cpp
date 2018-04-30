@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
 void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
 
     // Make sure we compute the number of pixels correctly for lines which are higher than whide, i.e., steep.
-    bool isLineSteep = std::abs(x0 - x1) < std::abs(y0 - y1);
-    if(isLineSteep) { // Swap x and y coords for steep lines. We have to keep this in mind when drawing the points for the line later.
+    bool is_line_steep = std::abs(x0 - x1) < std::abs(y0 - y1);
+    if(is_line_steep) { // Swap x and y coords for steep lines. We have to keep this in mind when drawing the points for the line later.
         std::swap(x0, y0);
         std::swap(x1, y1);
     }
@@ -39,20 +39,22 @@ void line(int x0, int y0, int x1, int y1, TGAImage &image, TGAColor color) {
     // Set the color for each pixel.
     int deltax = x1 - x0;
     int deltay = y1 - y0;
-    int derror2 = std::abs(deltay) * 2;
-    int error2 = 0;
+    int derror2 = std::abs(deltay) * 2; // We could use the error per pixel, but want to avoid floats.
+                                        // And to avoid having to compare this value to deltax/2 (another float) later, we multiply it by 2
+                                        // and can thus compare it to deltax then.
+    int current_error2 = 0;
     int y = y0;
     for (int x = x0; x <= x1; x++) {
-        if(isLineSteep) {
+        if(is_line_steep) {
             image.set(y, x, color);   // If we transposed the coords, adapt the positions here accordingly.
         }
         else {
             image.set(x, y, color);
         }
-        error2 += derror2;
-        if (error2 > deltax) {
-            y += (y1 > y0 ? 1 : -1);
-            error2 -= deltax * 2;
+        current_error2 += derror2;
+        if (current_error2 > deltax) {
+            y += (y1 > y0 ? 1 : -1);      // We know that the line is not steep because that is handled before, so we never need to change by more than 1.
+            current_error2 -= deltax * 2;
         }
     }
 }
